@@ -47,7 +47,7 @@
             clip-rule="evenodd"
           />
         </svg>
-        <span>Company</span>
+        <span>Raiis</span>
       </a>
       <!-- END Brand -->
 
@@ -134,38 +134,6 @@
         </div>
         <!-- END Toggle Sidebar on Mobile -->
 
-        <!-- Search -->
-        <div class="hidden lg:block">
-          <form onsubmit="return false;">
-            <input
-              type="text"
-              class="block w-full rounded-lg border border-gray-200 py-2 text-sm leading-5 placeholder-gray-400 focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 dark:border-gray-700 dark:bg-gray-900/25 dark:focus:border-gray-500"
-              id="search"
-              name="search"
-              placeholder="Search.."
-            />
-          </form>
-        </div>
-        <div class="lg:hidden">
-          <button
-            type="button"
-            class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-800 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
-          >
-            <svg
-              class="hi-solid hi-search inline-block size-5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-        <!-- END Search -->
       </div>
       <!-- END Left Section -->
 
@@ -437,50 +405,6 @@
   </main>
   <!-- END Page Content -->
 
-  <!-- Page Footer -->
-  <footer
-    id="page-footer"
-    class="flex flex-none items-center bg-white dark:bg-gray-800/50"
-  >
-    <div
-      class="mx-auto flex w-full max-w-10xl flex-col px-4 text-center text-sm md:flex-row md:justify-between md:text-left lg:px-8"
-    >
-      <div class="pt-4 pb-1 md:pb-4">
-        <a
-          href="https://tailkit.com"
-          target="_blank"
-          class="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-300"
-          >Tailkit</a
-        >
-        ©
-      </div>
-      <div class="inline-flex items-center justify-center pt-1 pb-4 md:pt-4">
-        <span>Crafted with</span>
-        <svg
-          class="hi-solid hi-heart mx-1 inline-block size-4 text-red-600"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        <span
-          >by
-          <a
-            href="https://pixelcave.com"
-            target="_blank"
-            class="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-300"
-            >pixelcave</a
-          ></span
-        >
-      </div>
-    </div>
-  </footer>
-  <!-- END Page Footer -->
 </div>
 <!-- END Page Container -->
 
