@@ -24,10 +24,6 @@
               </svg>
             </span>
             <span class="grow py-2">Dashboard</span>
-            <span
-              class="inline-flex rounded-full border border-gray-700 bg-gray-700 px-1.5 py-0.5 text-xs leading-4 font-semibold text-gray-50"
-              >3</span
-            >
           </a>
           <div
             class="px-3 pt-5 pb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase"
@@ -91,20 +87,17 @@
             <span
               class="flex flex-none items-center text-gray-500 group-hover:text-gray-300"
             >
-              <svg
-                class="hi-outline hi-users inline-block size-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-                />
+               <svg 
+                   xmlns="http://www.w3.org/2000/svg" 
+                   fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
+                   stroke="currentColor" 
+                   class="hi-outline hi-users inline-block size-5"
+                   >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+                  />
               </svg>
             </span>
             <span class="grow py-2">Knowledge Base</span>
@@ -116,19 +109,16 @@
             <span
               class="flex flex-none items-center text-gray-500 group-hover:text-gray-300"
             >
-              <svg
-                class="hi-outline hi-plus inline-block size-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
+              <svg 
+                 xmlns="http://www.w3.org/2000/svg" 
+                 fill="none" viewBox="0 0 24 24" 
+                 stroke-width="1.5" stroke="currentColor" 
+                 class="hi-outline hi-bolt inline-block size-5"
+                 >
+                <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round" 
+                d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
                 />
               </svg>
             </span>
@@ -142,22 +132,19 @@
             <span
               class="flex flex-none items-center text-gray-500 group-hover:text-gray-300"
             >
-              <svg
-                class="hi-outline hi-user-circle inline-block size-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
-                />
+            <svg 
+               xmlns="http://www.w3.org/2000/svg" 
+               fill="none" viewBox="0 0 24 24" 
+               stroke-width="1.5" stroke="currentColor" 
+               class="hi-outline hi-device-phone-mobile inline-block size-5"
+               >
+                <path 
+                   stroke-linecap="round" 
+                   stroke-linejoin="round" 
+                   d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
+                   />
               </svg>
-            </span>
+             </span>
             <span class="grow py-2">Call Logs & Analytics</span>
           </a>
         </nav>
