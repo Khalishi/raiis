@@ -17,7 +17,7 @@ new class extends Component
         class="flex flex-col gap-3 bg-gray-50 px-5 py-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left dark:bg-gray-700/50"
     >
         <div>
-        <h3 class="mb-1 font-semibold">Call Logs & Analytics</h3>
+        <h3 class="mb-1 font-semibold text-gray-800 dark:text-gray-200">Call Logs & Analytics</h3>
 
         </div>
         <div class="flex items-center gap-2">
@@ -30,8 +30,8 @@ new class extends Component
         <select
             id="date"
             name="date"
-            class="block w-full rounded-lg border border-gray-200 py-2 pr-10 pl-3 text-sm leading-5 font-semibold focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 sm:w-36 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
-        >
+            class="block w-full rounded-lg border border-gray-200 py-2 pr-10 pl-3 text-sm text-gray-800 dark:text-gray-200 leading-5 font-semibold focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 sm:w-44 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
+            >
             <option>Agency</option>
             <option>Pro</option>
             <option>Freelancer</option>
