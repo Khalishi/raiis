@@ -3,10 +3,10 @@
       <div class="w-full p-4">
         <nav class="space-y-1">
           <a
-            href="javascript:void(0)"
-            class="group flex items-center gap-2 rounded-lg border border-transparent bg-gray-700/75 px-2.5 text-sm font-medium text-white"
+            href="{{ route('dashboard') }}"
+            class="group flex items-center gap-2 rounded-lg border border-transparent px-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700/75 hover:text-white active:border-gray-600 {{ request()->routeIs('dashboard') ? 'bg-gray-700/75 text-white' : '' }}"
           >
-            <span class="flex flex-none items-center text-gray-300">
+            <span class="flex flex-none items-center text-gray-500 group-hover:text-gray-300">
               <svg
                 class="hi-outline hi-home inline-block size-5"
                 xmlns="http://www.w3.org/2000/svg"
@@ -126,8 +126,8 @@
           </a>
         
           <a
-            href="{{ route('call-logs-and-analytics') }}"
-            class="group flex items-center gap-2 rounded-lg border border-transparent px-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700/75 hover:text-white active:border-gray-600"
+              href="{{ route('call-logs-and-analytics') }}"
+              class="group flex items-center gap-2 rounded-lg border border-transparent px-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700/75 hover:text-white active:border-gray-600 {{ request()->routeIs('call-logs-and-analytics') ? 'bg-gray-700/75 text-white' : '' }}"
           >
             <span
               class="flex flex-none items-center text-gray-500 group-hover:text-gray-300"
