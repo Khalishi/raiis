@@ -1,3 +1,3 @@
 <x-layouts::app :title="__('Call Logs & Analytics')">
-  <h1>Call Logs & Analytics</h1>
+  <livewire:client.call-logs-and-analytics />
 </x-layouts::app>
