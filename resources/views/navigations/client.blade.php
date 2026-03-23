@@ -126,7 +126,7 @@
           </a>
         
           <a
-            href="javascript:void(0)"
+            href="{{ route('call-logs-and-analytics') }}"
             class="group flex items-center gap-2 rounded-lg border border-transparent px-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700/75 hover:text-white active:border-gray-600"
           >
             <span
