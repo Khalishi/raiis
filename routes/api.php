@@ -2,6 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Client\CallLogsAndAnalyticsController;
+use App\Http\Controllers\Api\CallLogController;
 
-Route::post('/v1/call-logs', [CallLogsAndAnalyticsController::class, 'store'])->middleware('auth:sanctum');
+Route::post('/v1/call-logs', [CallLogController::class, 'store']);

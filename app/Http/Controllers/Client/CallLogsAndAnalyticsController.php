@@ -12,8 +12,4 @@ class CallLogsAndAnalyticsController extends Controller
         return view('client-page.call-logs-and-analytics');
     }
 
-    public function store(Request $request)
-    {
-      return;
-    }
 }
