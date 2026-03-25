@@ -1,10 +1,17 @@
 <?php
 
 use Livewire\Component;
+use App\Models\CallLog;
+use Livewire\WithPagination;
 
 new class extends Component
 {
-    //
+    use WithPagination;
+
+    public function getCallLogsProperty()
+    {
+        return CallLog::orderBy('created_at', 'desc')->paginate(10);
+    }
 };
 ?>
 
@@ -17,20 +24,20 @@ new class extends Component
         class="flex flex-col gap-3 bg-gray-50 px-5 py-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left dark:bg-gray-700/50"
     >
         <div>
-        <h3 class="mb-1 font-semibold text-gray-800 dark:text-gray-200">Call Logs & Analytics</h3>
+        <h3 class="mb-1 font-semibold text-gray-900 dark:text-gray-50">Call Logs & Analytics</h3>
 
         </div>
         <div class="flex items-center gap-2">
         <button
             type="button"
-            class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-800 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
+            class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
         >
             Export
         </button>
         <select
             id="date"
             name="date"
-            class="block w-full rounded-lg border border-gray-200 py-2 pr-10 pl-3 text-sm text-gray-800 dark:text-gray-200 leading-5 font-semibold focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 sm:w-44 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
+            class="block w-full rounded-lg border border-gray-200 py-2 pr-10 pl-3 text-sm text-gray-900 dark:text-gray-50 leading-5 font-semibold focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 sm:w-44 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
             >
             <option>Agency</option>
             <option>Pro</option>
@@ -122,7 +129,8 @@ new class extends Component
             <tr
                 class="border-b border-gray-100 dark:border-gray-700/50"
             >
-                <td class="py-3 pr-3 font-medium">2026-03-23</td>
+               @forelse($this->callLogs as $callLog)
+                <td class="py-3 pr-3 font-medium">{{ $callLog->created_at->format('Y-m-d') }}</td>
                 <td class="flex items-center gap-2 p-3 text-gray-800 dark:text-gray-200 text-xl">
                 <svg
                     xmlns="http://www.w3.org/2000/svg" 
@@ -137,19 +145,19 @@ new class extends Component
                     d="M14.25 9.75v-4.5m0 4.5h4.5m-4.5 0 6-6m-3 18c-8.284 0-15-6.716-15-15V4.5A2.25 2.25 0 0 1 4.5 2.25h1.372c.516 0 .966.351 1.091.852l1.106 4.423c.11.44-.054.902-.417 1.173l-1.293.97a1.062 1.062 0 0 0-.38 1.21 12.035 12.035 0 0 0 7.143 7.143c.441.162.928-.004 1.21-.38l.97-1.293a1.125 1.125 0 0 1 1.173-.417l4.423 1.106c.5.125.852.575.852 1.091V19.5a2.25 2.25 0 0 1-2.25 2.25h-2.25Z"
                     />
                     </svg>
-                    +1234567890
+                    {{ $callLog->caller }}
                     </div>
                 </td>
-                <td class="p-3">John Doe</td>
+                <td class="p-3">{{ $callLog->agent_name }}</td>
                 <td class="p-3">
                     <div
                         class="inline-flex rounded-full border border-transparent bg-emerald-100 px-2 py-1 text-xs leading-4 font-semibold text-emerald-900 dark:border-emerald-900 dark:bg-emerald-700/10 dark:font-medium dark:text-emerald-200"
                     >
-                        Success
+                        {{ $callLog->outcome }}
                     </div>
                 </td>
-                <td class="p-3">10:00</td>
-                <td class="p-3">10:00</td>
+                <td class="p-3">{{ $callLog->formatted_duration }}</td>
+                <td class="p-3">{{ $callLog->booking_status }}</td>
                 <td class="p-3">
                 <div class="inline-flex items-center gap-1">
                     <button
@@ -190,11 +198,18 @@ new class extends Component
                 </div>
                 </td>
             </tr>
-            
+            @empty
+            <tr>
+                <td colspan="7" class="py-3 pr-3 font-medium text-center text-gray-900 dark:text-gray-50">No call logs found</td>
+            </tr>
+            @endforelse
             </tbody>
             <!-- END Table Body -->
         </table>
         <!-- END Table -->
+         <div class="mt-4">
+            {{ $this->callLogs->links() }}
+         </div>
         </div>
         <!-- END Responsive Table Container -->
     </div>
