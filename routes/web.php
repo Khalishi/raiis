@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Client\CallLogsAndAnalyticsController;
+use App\Http\Controllers\CallLogs\CallLogsAndAnalyticsController;
 
 Route::view('/', 'welcome')->name('home');
 
