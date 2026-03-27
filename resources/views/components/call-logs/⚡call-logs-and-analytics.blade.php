@@ -130,8 +130,8 @@ new class extends Component
                 class="border-b border-gray-100 dark:border-gray-700/50"
             >
                @forelse($this->callLogs as $callLog)
-                <td class="py-3 pr-3 font-medium">{{ $callLog->created_at->format('Y-m-d') }}</td>
-                <td class="flex items-center gap-2 p-3 text-gray-800 dark:text-gray-200 text-xl">
+                <td class="py-3 pr-3 font-medium text-gray-900 dark:text-gray-50">{{ $callLog->created_at->format('Y-m-d') }}</td>
+                <td class="flex items-center gap-2 p-3 text-gray-900 dark:text-gray-50 text-xl">
                 <svg
                     xmlns="http://www.w3.org/2000/svg" 
                     fill="none" viewBox="0 0 24 24" 
@@ -148,7 +148,7 @@ new class extends Component
                     {{ $callLog->caller }}
                     </div>
                 </td>
-                <td class="p-3">{{ $callLog->agent_name }}</td>
+                <td class="p-3 text-gray-900 dark:text-gray-50">{{ $callLog->agent_name }}</td>
                 <td class="p-3">
                     <div
                         class="inline-flex rounded-full border border-transparent bg-emerald-100 px-2 py-1 text-xs leading-4 font-semibold text-emerald-900 dark:border-emerald-900 dark:bg-emerald-700/10 dark:font-medium dark:text-emerald-200"
@@ -156,13 +156,13 @@ new class extends Component
                         {{ $callLog->outcome }}
                     </div>
                 </td>
-                <td class="p-3">{{ $callLog->formatted_duration }}</td>
-                <td class="p-3">{{ $callLog->booking_status }}</td>
+                <td class="p-3 text-gray-900 dark:text-gray-50">{{ $callLog->formatted_duration }}</td>
+                <td class="p-3 text-gray-900 dark:text-gray-50">{{ $callLog->booking_status }}</td>
                 <td class="p-3">
                 <div class="inline-flex items-center gap-1">
                     <button
                     type="button"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-800 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
                     <svg xmlns="http://www.w3.org/2000/svg" 
                          fill="none" 
@@ -179,7 +179,7 @@ new class extends Component
                     </button>
                     <button
                     type="button"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-800 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
                     <svg 
                        xmlns="http://www.w3.org/2000/svg" 
