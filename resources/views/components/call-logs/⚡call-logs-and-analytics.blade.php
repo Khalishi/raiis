@@ -9,6 +9,7 @@ new class extends Component
 {
     use WithPagination;
 
+    public string $search = '';
     public ?int $selectedCallLogId = null;
     public ?int $summaryForCallLogId = null;
     public ?array $selectedCallMeta = null;
@@ -17,7 +18,22 @@ new class extends Component
 
     public function getCallLogsProperty()
     {
-        return CallLog::orderBy('created_at', 'desc')->paginate(10);
+        return CallLog::query()
+            ->when($this->search !== '', function ($query) {
+                $term = '%' . trim($this->search) . '%';
+
+                $query->where(function ($innerQuery) use ($term) {
+                    $innerQuery->where('agent_name', 'like', $term)
+                        ->orWhere('outcome', 'like', $term);
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+    }
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
     }
 
     public function openSummaryModal(int $callLogId, AiCallSummaryService $aiCallSummaryService): void
@@ -117,8 +133,9 @@ new class extends Component
             type="text"
             id="search"
             name="search"
+            wire:model.live.debounce.300ms="search"
             class="block w-full rounded-lg border border-gray-200 py-2 pr-3 pl-10 text-sm leading-6 placeholder-gray-400 focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
-            placeholder="Search calls.."
+            placeholder="Search by agent or outcome.."
         />
         </div>
     </div>
