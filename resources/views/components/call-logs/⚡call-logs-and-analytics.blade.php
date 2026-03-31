@@ -10,6 +10,7 @@ new class extends Component
     use WithPagination;
 
     public string $search = '';
+    public string $outcomeFilter = '';
     public ?int $selectedCallLogId = null;
     public ?int $summaryForCallLogId = null;
     public ?array $selectedCallMeta = null;
@@ -27,11 +28,19 @@ new class extends Component
                         ->orWhere('outcome', 'like', $term);
                 });
             })
+            ->when($this->outcomeFilter !== '', function ($query) {
+                $query->where('outcome', $this->outcomeFilter);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
     }
 
     public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingOutcomeFilter(): void
     {
         $this->resetPage();
     }
@@ -98,15 +107,16 @@ new class extends Component
             Export
         </button>
         <select
-            id="date"
-            name="date"
+            id="outcome_filter"
+            name="outcome_filter"
+            wire:model.live="outcomeFilter"
             class="block w-full rounded-lg border border-gray-200 py-2 pr-10 pl-3 text-sm text-gray-900 dark:text-gray-50 leading-5 font-semibold focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 sm:w-44 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
             >
-            <option>Agency</option>
-            <option>Pro</option>
-            <option>Freelancer</option>
-            <option>Trial</option>
-            <option selected>All Outcomes</option>
+            <option value="">All Outcomes</option>
+            <option value="Completed">Completed</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Booking Made">Booking Made</option>
+            <option value="Escalated">Escalated</option>
         </select>
         </div>
     </div>
