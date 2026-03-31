@@ -2,16 +2,49 @@
 
 use Livewire\Component;
 use App\Models\CallLog;
+use App\Services\AiCallSummaryService;
 use Livewire\WithPagination;
 
 new class extends Component
 {
     use WithPagination;
 
+    public ?int $selectedCallLogId = null;
+    public ?array $selectedCallMeta = null;
+    public ?string $aiSummary = null;
+    public ?string $summaryError = null;
+
     public function getCallLogsProperty()
     {
         return CallLog::orderBy('created_at', 'desc')->paginate(10);
     }
+
+    public function openSummaryModal(int $callLogId, AiCallSummaryService $aiCallSummaryService): void
+    {
+        $this->selectedCallLogId = $callLogId;
+        $this->aiSummary = null;
+        $this->summaryError = null;
+        $this->selectedCallMeta = null;
+
+        try {
+            $callLog = CallLog::query()->findOrFail($callLogId);
+
+            $this->selectedCallMeta = [
+                'call_id' => $callLog->call_id,
+                'caller' => $callLog->caller,
+                'agent_name' => $callLog->agent_name,
+                'outcome' => $callLog->outcome,
+                'duration' => $callLog->formatted_duration,
+                'created_at' => optional($callLog->created_at)->format('M d, h:i A'),
+            ];
+
+            $this->aiSummary = $aiCallSummaryService->summarizeCall($callLog);
+        } catch (\Throwable $e) {
+            report($e);
+            $this->summaryError = 'Failed to generate summary for this call. Please try again.';
+        }
+    }
+
 };
 ?>
 
@@ -161,7 +194,9 @@ new class extends Component
                 <td class="p-3">
                 <div class="inline-flex items-center gap-1">
                     <button
-                     @click="open = ! open"
+                    type="button"
+                    x-on:click="open = true"
+                    wire:click="openSummaryModal({{ $callLog->id }})"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
                     <svg xmlns="http://www.w3.org/2000/svg" 
@@ -212,29 +247,68 @@ new class extends Component
          </div>
         </div>
         <!-- END Responsive Table Container -->
-        <x-modal state="open" max-width="max-w-md">
-            <x-slot:title>Call details</x-slot:title>
+        <x-modal state="open" max-width="max-w-2xl">
+            <x-slot:title>
+                AI Call Summary
+            </x-slot:title>
 
-            <p class="text-sm">Content..</p>
+            <div class="space-y-3">
+                @if($selectedCallMeta)
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        {{ $selectedCallMeta['caller'] ?? 'Unknown caller' }}
+                        @if(!empty($selectedCallMeta['created_at']))
+                            - {{ $selectedCallMeta['created_at'] }}
+                        @endif
+                        @if(!empty($selectedCallMeta['agent_name']))
+                            - {{ $selectedCallMeta['agent_name'] }}
+                        @endif
+                    </p>
+                @endif
+
+                <div wire:loading wire:target="openSummaryModal" class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                    Generating summary...
+                </div>
+
+                @if($summaryError)
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+                        {{ $summaryError }}
+                    </div>
+                @endif
+
+                @if($aiSummary)
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
+                        <div class="prose prose-sm max-w-none whitespace-pre-line text-gray-800 dark:prose-invert dark:text-gray-100">
+                            {{ $aiSummary }}
+                        </div>
+                    </div>
+                @endif
+            </div>
 
             <x-slot:footer>
-                <button
-                    x-on:click="open = false"
-                    type="button"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
-                >
-                    Cancel
-                </button>
-                <button
-                    x-on:click="open = false"
-                    type="button"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-700 bg-gray-700 px-3 py-2 text-sm leading-5 font-semibold text-white dark:text-gray-50 hover:border-gray-600 hover:bg-gray-600 hover:text-white focus:ring-3 focus:ring-gray-400/50 active:border-gray-700 active:bg-gray-700 dark:focus:ring-gray-400/90"
-                >
-                    Submit
-                </button>
-            </x-slot:footer>
-        </x-modal>
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                        @if(!empty($selectedCallMeta['duration']))
+                            <span class="rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                                Duration: {{ $selectedCallMeta['duration'] }}
+                            </span>
+                        @endif
+                        @if(!empty($selectedCallMeta['outcome']))
+                            <span class="rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                                Outcome: {{ $selectedCallMeta['outcome'] }}
+                            </span>
+                        @endif
+                    </div>
 
+                    <button
+                        x-on:click="open = false"
+                        type="button"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
+                    >
+                        Close
+                    </button>
+                </div>
+            </x-slot:footer>
+    </x-modal>
 </div>
 </div>
 <!-- END Tables: In Card with Search and Actions -->
