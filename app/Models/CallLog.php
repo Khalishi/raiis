@@ -17,6 +17,7 @@ class CallLog extends Model
         'started_at',
         'ended_at',
         'transcript',
+        'summary_script',
         'agent_name',
     ];
 

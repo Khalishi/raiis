@@ -34,11 +34,21 @@ new class extends Component
                 'caller' => $callLog->caller,
                 'agent_name' => $callLog->agent_name,
                 'outcome' => $callLog->outcome,
+                'booking_status' => $callLog->booking_status,
                 'duration' => $callLog->formatted_duration,
                 'created_at' => optional($callLog->created_at)->format('M d, h:i A'),
             ];
 
-            $this->aiSummary = $aiCallSummaryService->summarizeCall($callLog);
+            if (! empty($callLog->summary_script)) {
+                $this->aiSummary = $callLog->summary_script;
+                return;
+            }
+
+            $generatedSummary = $aiCallSummaryService->summarizeCall($callLog);
+            $callLog->summary_script = $generatedSummary;
+            $callLog->save();
+
+            $this->aiSummary = $generatedSummary;
         } catch (\Throwable $e) {
             report($e);
             $this->summaryError = 'Failed to generate summary for this call. Please try again.';
@@ -295,6 +305,11 @@ new class extends Component
                         @if(!empty($selectedCallMeta['outcome']))
                             <span class="rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">
                                 Outcome: {{ $selectedCallMeta['outcome'] }}
+                            </span>
+                        @endif
+                        @if(!empty($selectedCallMeta['booking_status']))
+                            <span class="rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                                Booking: {{ $selectedCallMeta['booking_status'] }}
                             </span>
                         @endif
                     </div>
