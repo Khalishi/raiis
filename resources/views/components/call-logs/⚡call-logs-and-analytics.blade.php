@@ -2,16 +2,88 @@
 
 use Livewire\Component;
 use App\Models\CallLog;
+use App\Services\AiCallSummaryService;
 use Livewire\WithPagination;
 
 new class extends Component
 {
     use WithPagination;
 
+    public string $search = '';
+    public string $outcomeFilter = '';
+    public ?int $selectedCallLogId = null;
+    public ?int $summaryForCallLogId = null;
+    public ?array $selectedCallMeta = null;
+    public ?string $aiSummary = null;
+    public ?string $summaryError = null;
+
     public function getCallLogsProperty()
     {
-        return CallLog::orderBy('created_at', 'desc')->paginate(10);
+        return CallLog::query()
+            ->when($this->search !== '', function ($query) {
+                $term = '%' . trim($this->search) . '%';
+
+                $query->where(function ($innerQuery) use ($term) {
+                    $innerQuery->where('agent_name', 'like', $term)
+                        ->orWhere('outcome', 'like', $term);
+                });
+            })
+            ->when($this->outcomeFilter !== '', function ($query) {
+                $query->where('outcome', $this->outcomeFilter);
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
     }
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingOutcomeFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function openSummaryModal(int $callLogId, AiCallSummaryService $aiCallSummaryService): void
+    {
+        $this->selectedCallLogId = $callLogId;
+        $this->summaryForCallLogId = null;
+        $this->aiSummary = null;
+        $this->summaryError = null;
+        $this->selectedCallMeta = null;
+
+        try {
+            $callLog = CallLog::query()->findOrFail($callLogId);
+
+            $this->selectedCallMeta = [
+                'call_id' => $callLog->call_id,
+                'caller' => $callLog->caller,
+                'agent_name' => $callLog->agent_name,
+                'outcome' => $callLog->outcome,
+                'booking_status' => $callLog->booking_status,
+                'duration' => $callLog->formatted_duration,
+                'created_at' => optional($callLog->created_at)->format('M d, h:i A'),
+            ];
+
+            if (! empty($callLog->summary_script)) {
+                $this->aiSummary = $callLog->summary_script;
+                $this->summaryForCallLogId = $callLogId;
+                return;
+            }
+
+            $generatedSummary = $aiCallSummaryService->summarizeCall($callLog);
+            $callLog->summary_script = $generatedSummary;
+            $callLog->save();
+
+            $this->aiSummary = $generatedSummary;
+            $this->summaryForCallLogId = $callLogId;
+        } catch (\Throwable $e) {
+            report($e);
+            $this->summaryError = 'Failed to generate summary for this call. Please try again.';
+        }
+    }
+
 };
 ?>
 
@@ -35,15 +107,16 @@ new class extends Component
             Export
         </button>
         <select
-            id="date"
-            name="date"
+            id="outcome_filter"
+            name="outcome_filter"
+            wire:model.live="outcomeFilter"
             class="block w-full rounded-lg border border-gray-200 py-2 pr-10 pl-3 text-sm text-gray-900 dark:text-gray-50 leading-5 font-semibold focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 sm:w-44 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
             >
-            <option>Agency</option>
-            <option>Pro</option>
-            <option>Freelancer</option>
-            <option>Trial</option>
-            <option selected>All Outcomes</option>
+            <option value="">All Outcomes</option>
+            <option value="Completed">Completed</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Booking Made">Booking Made</option>
+            <option value="Escalated">Escalated</option>
         </select>
         </div>
     </div>
@@ -70,12 +143,13 @@ new class extends Component
             type="text"
             id="search"
             name="search"
+            wire:model.live.debounce.300ms="search"
             class="block w-full rounded-lg border border-gray-200 py-2 pr-3 pl-10 text-sm leading-6 placeholder-gray-400 focus:border-gray-500 focus:ring-3 focus:ring-gray-500/50 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-gray-500"
-            placeholder="Search calls.."
+            placeholder="Search by agent or outcome.."
         />
         </div>
     </div>
-    <div class="grow p-5">
+    <div class="grow p-5" x-data="{ open: false }">
         <!-- Responsive Table Container -->
         <div
         class="min-w-full overflow-x-auto rounded-sm bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -162,6 +236,8 @@ new class extends Component
                 <div class="inline-flex items-center gap-1">
                     <button
                     type="button"
+                    x-on:click="open = true; $wire.set('selectedCallLogId', {{ $callLog->id }})"
+                    wire:click="openSummaryModal({{ $callLog->id }})"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
                     <svg xmlns="http://www.w3.org/2000/svg" 
@@ -212,8 +288,73 @@ new class extends Component
          </div>
         </div>
         <!-- END Responsive Table Container -->
-    </div>
-    </div>
-    <!-- END Tables: In Card with Search and Actions -->
+        <x-modal state="open" max-width="max-w-2xl">
+            <x-slot:title>
+                AI Call Summary
+            </x-slot:title>
 
+            <div class="space-y-3">
+                @if($selectedCallMeta)
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        {{ $selectedCallMeta['caller'] ?? 'Unknown caller' }}
+                        @if(!empty($selectedCallMeta['created_at']))
+                            - {{ $selectedCallMeta['created_at'] }}
+                        @endif
+                        @if(!empty($selectedCallMeta['agent_name']))
+                            - {{ $selectedCallMeta['agent_name'] }}
+                        @endif
+                    </p>
+                @endif
+
+                <div wire:loading wire:target="openSummaryModal" class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                    Generating summary...
+                </div>
+
+                @if($summaryError)
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+                        {{ $summaryError }}
+                    </div>
+                @endif
+
+                @if($aiSummary && $summaryForCallLogId === $selectedCallLogId)
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
+                        <div class="prose prose-sm max-w-none whitespace-pre-line text-gray-800 dark:prose-invert dark:text-gray-100">
+                            {{ $aiSummary }}
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <x-slot:footer>
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                        @if(!empty($selectedCallMeta['duration']))
+                            <span class="rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                                Duration: {{ $selectedCallMeta['duration'] }}
+                            </span>
+                        @endif
+                        @if(!empty($selectedCallMeta['outcome']))
+                            <span class="rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                                Outcome: {{ $selectedCallMeta['outcome'] }}
+                            </span>
+                        @endif
+                        @if(!empty($selectedCallMeta['booking_status']))
+                            <span class="rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                                Booking: {{ $selectedCallMeta['booking_status'] }}
+                            </span>
+                        @endif
+                    </div>
+
+                    <button
+                        x-on:click="open = false"
+                        type="button"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
+                    >
+                        Close
+                    </button>
+                </div>
+            </x-slot:footer>
+    </x-modal>
 </div>
+</div>
+<!-- END Tables: In Card with Search and Actions -->
