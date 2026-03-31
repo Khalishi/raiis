@@ -10,6 +10,7 @@ new class extends Component
     use WithPagination;
 
     public ?int $selectedCallLogId = null;
+    public ?int $summaryForCallLogId = null;
     public ?array $selectedCallMeta = null;
     public ?string $aiSummary = null;
     public ?string $summaryError = null;
@@ -22,6 +23,7 @@ new class extends Component
     public function openSummaryModal(int $callLogId, AiCallSummaryService $aiCallSummaryService): void
     {
         $this->selectedCallLogId = $callLogId;
+        $this->summaryForCallLogId = null;
         $this->aiSummary = null;
         $this->summaryError = null;
         $this->selectedCallMeta = null;
@@ -41,6 +43,7 @@ new class extends Component
 
             if (! empty($callLog->summary_script)) {
                 $this->aiSummary = $callLog->summary_script;
+                $this->summaryForCallLogId = $callLogId;
                 return;
             }
 
@@ -49,6 +52,7 @@ new class extends Component
             $callLog->save();
 
             $this->aiSummary = $generatedSummary;
+            $this->summaryForCallLogId = $callLogId;
         } catch (\Throwable $e) {
             report($e);
             $this->summaryError = 'Failed to generate summary for this call. Please try again.';
@@ -205,7 +209,7 @@ new class extends Component
                 <div class="inline-flex items-center gap-1">
                     <button
                     type="button"
-                    x-on:click="open = true"
+                    x-on:click="open = true; $wire.set('selectedCallLogId', {{ $callLog->id }})"
                     wire:click="openSummaryModal({{ $callLog->id }})"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
@@ -285,7 +289,7 @@ new class extends Component
                     </div>
                 @endif
 
-                @if($aiSummary)
+                @if($aiSummary && $summaryForCallLogId === $selectedCallLogId)
                     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
                         <div class="prose prose-sm max-w-none whitespace-pre-line text-gray-800 dark:prose-invert dark:text-gray-100">
                             {{ $aiSummary }}
