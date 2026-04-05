@@ -18,6 +18,8 @@ class CallLog extends Model
         'ended_at',
         'transcript',
         'summary_script',
+        'recording_object_key',
+        'recording_url',
         'agent_name',
     ];
 
