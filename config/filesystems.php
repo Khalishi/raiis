@@ -17,6 +17,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Call recordings (S3-compatible, e.g. DigitalOcean Spaces)
+    |--------------------------------------------------------------------------
+    */
+
+    'recordings_disk' => env('RECORDINGS_FILESYSTEM_DISK', 's3'),
+
+    'recordings_temporary_url_ttl' => (int) env('RECORDINGS_TEMPORARY_URL_TTL', 60),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

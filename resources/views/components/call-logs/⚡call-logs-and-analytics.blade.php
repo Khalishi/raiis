@@ -3,6 +3,7 @@
 use Livewire\Component;
 use App\Models\CallLog;
 use App\Services\AiCallSummaryService;
+use App\Services\CallRecordingUrlService;
 use Livewire\WithPagination;
 
 new class extends Component
@@ -16,6 +17,12 @@ new class extends Component
     public ?array $selectedCallMeta = null;
     public ?string $aiSummary = null;
     public ?string $summaryError = null;
+
+    public ?int $recordingCallLogId = null;
+
+    public ?string $recordingPlaybackUrl = null;
+
+    public ?string $recordingError = null;
 
     public function getCallLogsProperty()
     {
@@ -84,6 +91,42 @@ new class extends Component
         }
     }
 
+    public function openRecordingModal(int $callLogId, CallRecordingUrlService $recordingUrlService): void
+    {
+        $this->recordingCallLogId = $callLogId;
+        $this->recordingPlaybackUrl = null;
+        $this->recordingError = null;
+
+        try {
+            $callLog = CallLog::query()->findOrFail($callLogId);
+
+            if (! filled($callLog->recording_url) && ! filled($callLog->recording_object_key)) {
+                $this->recordingError = __('No recording is available for this call.');
+
+                return;
+            }
+
+            $url = $recordingUrlService->playbackUrl($callLog);
+            if ($url === null) {
+                $this->recordingError = __('Could not load the recording. Check storage configuration.');
+
+                return;
+            }
+
+            $this->recordingPlaybackUrl = $url;
+        } catch (\Throwable $e) {
+            report($e);
+            $this->recordingError = __('Could not load the recording. Please try again.');
+        }
+    }
+
+    public function resetRecordingPlayer(): void
+    {
+        $this->recordingCallLogId = null;
+        $this->recordingPlaybackUrl = null;
+        $this->recordingError = null;
+    }
+
 };
 ?>
 
@@ -149,7 +192,7 @@ new class extends Component
         />
         </div>
     </div>
-    <div class="grow p-5" x-data="{ open: false }">
+    <div class="grow p-5" x-data="{ openSummary: false, openRecording: false }">
         <!-- Responsive Table Container -->
         <div
         class="min-w-full overflow-x-auto rounded-sm bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -220,7 +263,6 @@ new class extends Component
                     />
                     </svg>
                     {{ $callLog->caller }}
-                    </div>
                 </td>
                 <td class="p-3 text-gray-900 dark:text-gray-50">{{ $callLog->agent_name }}</td>
                 <td class="p-3">
@@ -236,7 +278,7 @@ new class extends Component
                 <div class="inline-flex items-center gap-1">
                     <button
                     type="button"
-                    x-on:click="open = true; $wire.set('selectedCallLogId', {{ $callLog->id }})"
+                    x-on:click="openSummary = true; $wire.set('selectedCallLogId', {{ $callLog->id }})"
                     wire:click="openSummaryModal({{ $callLog->id }})"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
@@ -253,24 +295,47 @@ new class extends Component
                         />
                     </svg>
                     </button>
+                    @if(filled($callLog->recording_url) || filled($callLog->recording_object_key))
                     <button
                     type="button"
+                    x-on:click="openRecording = true"
+                    wire:click="openRecordingModal({{ $callLog->id }})"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
-                    <svg 
-                       xmlns="http://www.w3.org/2000/svg" 
-                       fill="none" viewBox="0 0 24 24" 
-                       stroke-width="1.5" 
-                       stroke="currentColor" 
+                    <svg
+                       xmlns="http://www.w3.org/2000/svg"
+                       fill="none" viewBox="0 0 24 24"
+                       stroke-width="1.5"
+                       stroke="currentColor"
                        class="hi-outline hi-play inline-block size-6"
                        >
-                    <path 
-                       stroke-linecap="round" 
-                       stroke-linejoin="round" 
+                    <path
+                       stroke-linecap="round"
+                       stroke-linejoin="round"
                        d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
                        />
                     </svg>
                     </button>
+                    @else
+                    <span
+                    class="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-sm leading-5 font-semibold text-gray-400 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-500"
+                    title="{{ __('No recording') }}"
+                    >
+                    <svg
+                       xmlns="http://www.w3.org/2000/svg"
+                       fill="none" viewBox="0 0 24 24"
+                       stroke-width="1.5"
+                       stroke="currentColor"
+                       class="hi-outline hi-play inline-block size-6"
+                       >
+                    <path
+                       stroke-linecap="round"
+                       stroke-linejoin="round"
+                       d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                       />
+                    </svg>
+                    </span>
+                    @endif
                 </div>
                 </td>
             </tr>
@@ -288,7 +353,7 @@ new class extends Component
          </div>
         </div>
         <!-- END Responsive Table Container -->
-        <x-modal state="open" max-width="max-w-2xl">
+        <x-modal state="openSummary" max-width="max-w-2xl">
             <x-slot:title>
                 AI Call Summary
             </x-slot:title>
@@ -346,7 +411,7 @@ new class extends Component
                     </div>
 
                     <button
-                        x-on:click="open = false"
+                        x-on:click="openSummary = false"
                         type="button"
                         class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
@@ -355,6 +420,44 @@ new class extends Component
                 </div>
             </x-slot:footer>
     </x-modal>
+
+        <x-modal state="openRecording" max-width="max-w-lg">
+            <x-slot:title>
+                {{ __('Call recording') }}
+            </x-slot:title>
+
+            <div class="space-y-4">
+                <div wire:loading wire:target="openRecordingModal" class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                    {{ __('Preparing audio…') }}
+                </div>
+
+                @if($recordingError)
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+                        {{ $recordingError }}
+                    </div>
+                @elseif($recordingPlaybackUrl)
+                    <audio
+                        wire:key="recording-{{ $recordingCallLogId }}"
+                        class="w-full"
+                        controls
+                        preload="metadata"
+                        src="{{ $recordingPlaybackUrl }}"
+                    >
+                        {{ __('Your browser does not support the audio element.') }}
+                    </audio>
+                @endif
+            </div>
+
+            <x-slot:footer>
+                <button
+                    x-on:click="openRecording = false; $wire.resetRecordingPlayer()"
+                    type="button"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
+                >
+                    {{ __('Close') }}
+                </button>
+            </x-slot:footer>
+        </x-modal>
 </div>
 </div>
 <!-- END Tables: In Card with Search and Actions -->
