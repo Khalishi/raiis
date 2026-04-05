@@ -24,6 +24,17 @@ new class extends Component
 
     public ?string $recordingError = null;
 
+    public bool $recordingModalOpen = false;
+
+    public function updatedRecordingModalOpen(bool $value): void
+    {
+        if (! $value) {
+            $this->recordingCallLogId = null;
+            $this->recordingPlaybackUrl = null;
+            $this->recordingError = null;
+        }
+    }
+
     public function getCallLogsProperty()
     {
         return CallLog::query()
@@ -117,14 +128,14 @@ new class extends Component
         } catch (\Throwable $e) {
             report($e);
             $this->recordingError = __('Could not load the recording. Please try again.');
+        } finally {
+            $this->recordingModalOpen = true;
         }
     }
 
     public function resetRecordingPlayer(): void
     {
-        $this->recordingCallLogId = null;
-        $this->recordingPlaybackUrl = null;
-        $this->recordingError = null;
+        $this->recordingModalOpen = false;
     }
 
 };
@@ -192,7 +203,13 @@ new class extends Component
         />
         </div>
     </div>
-    <div class="grow p-5" x-data="{ openSummary: false, openRecording: false }">
+    <div
+        class="grow p-5"
+        x-data="{
+            openSummary: false,
+            openRecording: @entangle('recordingModalOpen').live,
+        }"
+    >
         <!-- Responsive Table Container -->
         <div
         class="min-w-full overflow-x-auto rounded-sm bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -298,8 +315,9 @@ new class extends Component
                     @if(filled($callLog->recording_url) || filled($callLog->recording_object_key))
                     <button
                     type="button"
-                    x-on:click="openRecording = true"
                     wire:click="openRecordingModal({{ $callLog->id }})"
+                    wire:loading.class.add="pointer-events-none opacity-50"
+                    wire:target="openRecordingModal"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
                     <svg
@@ -441,7 +459,7 @@ new class extends Component
                         class="w-full"
                         controls
                         preload="metadata"
-                        src="{{ $recordingPlaybackUrl }}"
+                        src="{!! $recordingPlaybackUrl !!}"
                     >
                         {{ __('Your browser does not support the audio element.') }}
                     </audio>
@@ -450,7 +468,7 @@ new class extends Component
 
             <x-slot:footer>
                 <button
-                    x-on:click="openRecording = false; $wire.resetRecordingPlayer()"
+                    wire:click="resetRecordingPlayer"
                     type="button"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                 >

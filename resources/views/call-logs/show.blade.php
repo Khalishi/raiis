@@ -24,7 +24,7 @@
             </div>
             <div class="space-y-4 p-5">
                 @if($playbackUrl)
-                    <audio class="w-full" controls preload="metadata" src="{{ $playbackUrl }}">
+                    <audio class="w-full" controls preload="metadata" src="{!! $playbackUrl !!}">
                         {{ __('Your browser does not support the audio element.') }}
                     </audio>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
