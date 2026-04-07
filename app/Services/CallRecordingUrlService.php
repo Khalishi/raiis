@@ -34,6 +34,54 @@ class CallRecordingUrlService
         return null;
     }
 
+    public function debugDetails(CallLog $callLog): array
+    {
+        $disk = config('filesystems.recordings_disk', 's3');
+        $basePrefix = trim((string) config('filesystems.recordings_prefix', 'value-logistics/recordings'), '/');
+        $callId = trim((string) ($callLog->call_id ?? ''));
+        $callPrefix = $callId !== '' ? $basePrefix . '/' . $callId : null;
+
+        $existingKey = $this->normalizeObjectKey((string) ($callLog->recording_object_key ?? ''), $basePrefix);
+        $fromStoredUrl = $this->extractObjectKeyFromUrl((string) ($callLog->recording_url ?? ''), $basePrefix);
+        $folderFiles = $callPrefix !== null ? $this->audioObjectsForPrefix($disk, $callPrefix) : collect();
+        $latestFromFolder = $folderFiles->first();
+
+        $selectedKey = $existingKey !== '' ? $existingKey : ($fromStoredUrl !== '' ? $fromStoredUrl : ($latestFromFolder['path'] ?? null));
+        $exists = false;
+        $signedUrl = null;
+
+        if (is_string($selectedKey) && $selectedKey !== '') {
+            try {
+                $exists = Storage::disk($disk)->exists($selectedKey);
+                if ($exists) {
+                    $signedUrl = Storage::disk($disk)->temporaryUrl(
+                        $selectedKey,
+                        now()->addMinutes(max(1, (int) config('filesystems.recordings_temporary_url_ttl', 60)))
+                    );
+                }
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
+
+        return [
+            'call_log_id' => $callLog->id,
+            'call_id' => $callLog->call_id,
+            'disk' => $disk,
+            'prefix' => $basePrefix,
+            'call_prefix' => $callPrefix,
+            'db_recording_object_key' => $callLog->recording_object_key,
+            'normalized_db_key' => $existingKey,
+            'recording_url' => $callLog->recording_url,
+            'key_from_recording_url' => $fromStoredUrl,
+            'files_found_in_call_folder' => $folderFiles->count(),
+            'latest_files_in_call_folder' => $folderFiles->take(5)->pluck('path')->values()->all(),
+            'selected_key' => $selectedKey,
+            'selected_key_exists' => $exists,
+            'playback_url' => $signedUrl,
+        ];
+    }
+
     private function resolveRecordingObjectKey(CallLog $callLog): ?string
     {
         $disk = config('filesystems.recordings_disk', 's3');
@@ -68,13 +116,18 @@ class CallRecordingUrlService
 
     private function latestAudioObjectForPrefix(string $disk, string $prefix): ?string
     {
+        return $this->audioObjectsForPrefix($disk, $prefix)->first()['path'] ?? null;
+    }
+
+    private function audioObjectsForPrefix(string $disk, string $prefix)
+    {
         try {
             $files = collect(Storage::disk($disk)->allFiles($prefix))
                 ->filter(fn (string $path): bool => Str::endsWith(Str::lower($path), ['.wav', '.mp3', '.m4a', '.ogg']))
                 ->values();
 
             if ($files->isEmpty()) {
-                return null;
+                return collect();
             }
 
             return $files
@@ -83,12 +136,11 @@ class CallRecordingUrlService
                     'last_modified' => (int) Storage::disk($disk)->lastModified($path),
                 ])
                 ->sortByDesc('last_modified')
-                ->pluck('path')
-                ->first();
+                ->values();
         } catch (Throwable $e) {
             report($e);
 
-            return null;
+            return collect();
         }
     }
 

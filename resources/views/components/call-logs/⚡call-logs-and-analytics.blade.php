@@ -21,6 +21,7 @@ new class extends Component
     public ?int $recordingCallLogId = null;
 
     public ?string $recordingPlaybackUrl = null;
+    public ?array $recordingDebug = null;
 
     public ?string $recordingError = null;
 
@@ -31,6 +32,7 @@ new class extends Component
         if (! $value) {
             $this->recordingCallLogId = null;
             $this->recordingPlaybackUrl = null;
+            $this->recordingDebug = null;
             $this->recordingError = null;
         }
     }
@@ -106,18 +108,13 @@ new class extends Component
     {
         $this->recordingCallLogId = $callLogId;
         $this->recordingPlaybackUrl = null;
+        $this->recordingDebug = null;
         $this->recordingError = null;
 
         try {
             $callLog = CallLog::query()->findOrFail($callLogId);
-
-            if (! filled($callLog->recording_url) && ! filled($callLog->recording_object_key)) {
-                $this->recordingError = __('No recording is available for this call.');
-
-                return;
-            }
-
-            $url = $recordingUrlService->playbackUrl($callLog);
+            $this->recordingDebug = $recordingUrlService->debugDetails($callLog);
+            $url = $this->recordingDebug['playback_url'] ?? null;
             if ($url === null) {
                 $this->recordingError = __('Could not load the recording. Check storage configuration.');
 
@@ -260,10 +257,8 @@ new class extends Component
 
             <!-- Table Body -->
             <tbody>
-            <tr
-                class="border-b border-gray-100 dark:border-gray-700/50"
-            >
                @forelse($this->callLogs as $callLog)
+            <tr class="border-b border-gray-100 dark:border-gray-700/50">
                 <td class="py-3 pr-3 font-medium text-gray-900 dark:text-gray-50">{{ $callLog->created_at->format('Y-m-d') }}</td>
                 <td class="flex items-center gap-2 p-3 text-gray-900 dark:text-gray-50 text-xl">
                 <svg
@@ -317,7 +312,7 @@ new class extends Component
                     type="button"
                     wire:click="openRecordingModal({{ $callLog->id }})"
                     wire:loading.class.add="pointer-events-none opacity-50"
-                    wire:target="openRecordingModal"
+                    wire:target="openRecordingModal({{ $callLog->id }})"
                     class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm leading-5 font-semibold text-gray-900 dark:text-gray-50 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
                     >
                     <svg
@@ -463,6 +458,13 @@ new class extends Component
                     >
                         {{ __('Your browser does not support the audio element.') }}
                     </audio>
+                @endif
+
+                @if($recordingDebug)
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-100">
+                        <div class="mb-2 font-semibold">{{ __('Recording Debug') }}</div>
+                        <pre class="overflow-x-auto whitespace-pre-wrap">{{ json_encode($recordingDebug, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                    </div>
                 @endif
             </div>
 
