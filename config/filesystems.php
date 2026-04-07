@@ -56,6 +56,8 @@ return [
 
     'recordings_temporary_url_ttl' => (int) env('RECORDINGS_TEMPORARY_URL_TTL', 60),
 
+    'recordings_prefix' => env('RECORDINGS_PREFIX', 'value-logistics/recordings'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
