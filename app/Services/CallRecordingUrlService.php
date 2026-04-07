@@ -34,63 +34,6 @@ class CallRecordingUrlService
         return null;
     }
 
-    public function debugDetails(CallLog $callLog): array
-    {
-        $disk = config('filesystems.recordings_disk', 's3');
-        $basePrefix = trim((string) config('filesystems.recordings_prefix', 'value-logistics/recordings'), '/');
-        $callId = trim((string) ($callLog->call_id ?? ''));
-        $callPrefix = $callId !== '' ? $basePrefix . '/' . $callId : null;
-        $bucket = trim((string) config('filesystems.disks.s3.bucket', ''), '/');
-        $bucketCallPrefix = ($bucket !== '' && $callPrefix !== null) ? $bucket . '/' . $callPrefix : null;
-
-        $existingKey = $this->normalizeObjectKey((string) ($callLog->recording_object_key ?? ''), $basePrefix);
-        $fromStoredUrl = $this->extractObjectKeyFromUrl((string) ($callLog->recording_url ?? ''), $basePrefix);
-        $folderFiles = $callPrefix !== null ? $this->audioObjectsForPrefix($disk, $callPrefix) : collect();
-        $bucketFolderFiles = $bucketCallPrefix !== null ? $this->audioObjectsForPrefix($disk, $bucketCallPrefix) : collect();
-        $latestFromFolder = $folderFiles->first();
-        $latestFromBucketFolder = $bucketFolderFiles->first();
-
-        $selectedKey = $existingKey !== '' ? $existingKey : ($fromStoredUrl !== '' ? $fromStoredUrl : ($latestFromFolder['path'] ?? ($latestFromBucketFolder['path'] ?? null)));
-        $resolvedSelectedKey = is_string($selectedKey) ? $this->firstExistingKeyCandidate($disk, $selectedKey, $bucket) : null;
-        $exists = false;
-        $signedUrl = null;
-
-        if (is_string($resolvedSelectedKey) && $resolvedSelectedKey !== '') {
-            try {
-                $exists = Storage::disk($disk)->exists($resolvedSelectedKey);
-                if ($exists) {
-                    $signedUrl = Storage::disk($disk)->temporaryUrl(
-                        $resolvedSelectedKey,
-                        now()->addMinutes(max(1, (int) config('filesystems.recordings_temporary_url_ttl', 60)))
-                    );
-                }
-            } catch (Throwable $e) {
-                report($e);
-            }
-        }
-
-        return [
-            'call_log_id' => $callLog->id,
-            'call_id' => $callLog->call_id,
-            'disk' => $disk,
-            'prefix' => $basePrefix,
-            'call_prefix' => $callPrefix,
-            'bucket_call_prefix' => $bucketCallPrefix,
-            'db_recording_object_key' => $callLog->recording_object_key,
-            'normalized_db_key' => $existingKey,
-            'recording_url' => $callLog->recording_url,
-            'key_from_recording_url' => $fromStoredUrl,
-            'files_found_in_call_folder' => $folderFiles->count(),
-            'latest_files_in_call_folder' => $folderFiles->take(5)->pluck('path')->values()->all(),
-            'files_found_in_bucket_call_folder' => $bucketFolderFiles->count(),
-            'latest_files_in_bucket_call_folder' => $bucketFolderFiles->take(5)->pluck('path')->values()->all(),
-            'selected_key' => $selectedKey,
-            'resolved_selected_key' => $resolvedSelectedKey,
-            'selected_key_exists' => $exists,
-            'playback_url' => $signedUrl,
-        ];
-    }
-
     private function resolveRecordingObjectKey(CallLog $callLog): ?string
     {
         $disk = config('filesystems.recordings_disk', 's3');

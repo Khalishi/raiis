@@ -21,7 +21,6 @@ new class extends Component
     public ?int $recordingCallLogId = null;
 
     public ?string $recordingPlaybackUrl = null;
-    public ?array $recordingDebug = null;
 
     public ?string $recordingError = null;
 
@@ -32,7 +31,6 @@ new class extends Component
         if (! $value) {
             $this->recordingCallLogId = null;
             $this->recordingPlaybackUrl = null;
-            $this->recordingDebug = null;
             $this->recordingError = null;
         }
     }
@@ -108,13 +106,11 @@ new class extends Component
     {
         $this->recordingCallLogId = $callLogId;
         $this->recordingPlaybackUrl = null;
-        $this->recordingDebug = null;
         $this->recordingError = null;
 
         try {
             $callLog = CallLog::query()->findOrFail($callLogId);
-            $this->recordingDebug = $recordingUrlService->debugDetails($callLog);
-            $url = $this->recordingDebug['playback_url'] ?? null;
+            $url = $recordingUrlService->playbackUrl($callLog);
             if ($url === null) {
                 $this->recordingError = __('Could not load the recording. Check storage configuration.');
 
@@ -458,13 +454,6 @@ new class extends Component
                     >
                         {{ __('Your browser does not support the audio element.') }}
                     </audio>
-                @endif
-
-                @if($recordingDebug)
-                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-100">
-                        <div class="mb-2 font-semibold">{{ __('Recording Debug') }}</div>
-                        <pre class="overflow-x-auto whitespace-pre-wrap">{{ json_encode($recordingDebug, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
-                    </div>
                 @endif
             </div>
 
