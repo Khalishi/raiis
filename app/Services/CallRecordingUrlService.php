@@ -36,26 +36,27 @@ class CallRecordingUrlService
 
     private function resolveRecordingObjectKey(CallLog $callLog): ?string
     {
-        $existingKey = $callLog->recording_object_key;
-        if (is_string($existingKey) && $existingKey !== '') {
-            return $existingKey;
-        }
-
         $disk = config('filesystems.recordings_disk', 's3');
         $basePrefix = trim((string) config('filesystems.recordings_prefix', 'value-logistics/recordings'), '/');
         $callId = trim((string) ($callLog->call_id ?? ''));
 
-        $candidateKey = null;
-
-        if ($callId !== '') {
-            $candidateKey = $this->latestAudioObjectForPrefix($disk, $basePrefix . '/' . $callId);
+        $existingKey = $this->normalizeObjectKey((string) ($callLog->recording_object_key ?? ''), $basePrefix);
+        if ($existingKey !== '') {
+            return $existingKey;
         }
 
-        if (! is_string($candidateKey) || $candidateKey === '') {
-            // Fallback: latest object in recordings root when call-specific folder is missing.
-            $candidateKey = $this->latestAudioObjectForPrefix($disk, $basePrefix);
+        $fromStoredUrl = $this->extractObjectKeyFromUrl((string) ($callLog->recording_url ?? ''), $basePrefix);
+        if ($fromStoredUrl !== '') {
+            $callLog->forceFill(['recording_object_key' => $fromStoredUrl])->saveQuietly();
+
+            return $fromStoredUrl;
         }
 
+        if ($callId === '') {
+            return null;
+        }
+
+        $candidateKey = $this->latestAudioObjectForPrefix($disk, $basePrefix . '/' . $callId);
         if (is_string($candidateKey) && $candidateKey !== '') {
             $callLog->forceFill(['recording_object_key' => $candidateKey])->saveQuietly();
 
@@ -89,5 +90,42 @@ class CallRecordingUrlService
 
             return null;
         }
+    }
+
+    private function extractObjectKeyFromUrl(string $url, string $basePrefix): string
+    {
+        if ($url === '') {
+            return '';
+        }
+
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        if ($path === '') {
+            return '';
+        }
+
+        return $this->normalizeObjectKey($path, $basePrefix);
+    }
+
+    private function normalizeObjectKey(string $keyOrPath, string $basePrefix): string
+    {
+        $value = trim($keyOrPath);
+        if ($value === '') {
+            return '';
+        }
+
+        $value = ltrim($value, '/');
+        $bucket = trim((string) config('filesystems.disks.s3.bucket', ''), '/');
+
+        // Handle malformed URLs/paths like /bucket/value-logistics/recordings/...
+        if ($bucket !== '' && Str::startsWith($value, $bucket . '/')) {
+            $value = substr($value, strlen($bucket) + 1);
+        }
+
+        $prefixPos = strpos($value, $basePrefix . '/');
+        if ($prefixPos === false) {
+            return '';
+        }
+
+        return substr($value, $prefixPos);
     }
 }
