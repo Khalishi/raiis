@@ -13,7 +13,6 @@
     x-transition:leave="transition ease-in duration-100"
     x-transition:leave-start="opacity-100"
     x-transition:leave-end="opacity-0"
-    x-bind:aria-hidden="!({{ $state }})"
     x-on:keydown.escape.window="{{ $state }} = false"
     x-on:click.self="{{ $state }} = false"
     tabindex="-1"
