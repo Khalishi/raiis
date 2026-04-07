@@ -21,6 +21,7 @@ new class extends Component
     public ?int $recordingCallLogId = null;
 
     public ?string $recordingPlaybackUrl = null;
+    public ?string $recordingDownloadUrl = null;
 
     public ?string $recordingError = null;
 
@@ -31,6 +32,7 @@ new class extends Component
         if (! $value) {
             $this->recordingCallLogId = null;
             $this->recordingPlaybackUrl = null;
+            $this->recordingDownloadUrl = null;
             $this->recordingError = null;
         }
     }
@@ -106,6 +108,7 @@ new class extends Component
     {
         $this->recordingCallLogId = $callLogId;
         $this->recordingPlaybackUrl = null;
+        $this->recordingDownloadUrl = null;
         $this->recordingError = null;
 
         try {
@@ -118,6 +121,7 @@ new class extends Component
             }
 
             $url = $recordingUrlService->playbackUrl($callLog);
+            $downloadUrl = $recordingUrlService->downloadUrl($callLog);
             if ($url === null) {
                 $this->recordingError = __('Could not load the recording. Check storage configuration.');
 
@@ -125,6 +129,7 @@ new class extends Component
             }
 
             $this->recordingPlaybackUrl = $url;
+            $this->recordingDownloadUrl = $downloadUrl;
         } catch (\Throwable $e) {
             report($e);
             $this->recordingError = __('Could not load the recording. Please try again.');
@@ -463,6 +468,17 @@ new class extends Component
                     >
                         {{ __('Your browser does not support the audio element.') }}
                     </audio>
+                    @if($recordingDownloadUrl)
+                        <a
+                            href="{{ $recordingDownloadUrl }}"
+                            class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm leading-5 font-semibold text-gray-900 hover:border-gray-300 hover:text-gray-900 hover:shadow-xs focus:ring-3 focus:ring-gray-300/25 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600/40 dark:active:border-gray-700"
+                            target="_blank"
+                            rel="noopener"
+                            download
+                        >
+                            {{ __('Download recording (temporary link)') }}
+                        </a>
+                    @endif
                 @endif
             </div>
 
